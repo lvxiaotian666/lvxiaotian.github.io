@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>calendar</title>
+    <style>
+        *{
+            margin:0;
+            padding:0;
+            list-style: none;
+            outline: none;
+            box-sizing: border-box;
+        }
+        .wraper{
+            margin:20px auto;
+            text-align: center;
+            width:180px;
+            height: 30px;
+            position: relative;
+        }
+        .wraper>input{
+            width:180px;
+            height: 30px;
+            padding-left:20px;
+        }
+        .calendar{
+            width:210px;
+            box-sizing: border-box;
+            position:absolute;
+            top:30px;
+            background:#FED;
+            padding-top: 10px;
+            display: none;
+        }
+        li{
+            box-sizing: border-box;
+            float: left;
+            width:30px;
+            height: 24px;
+            text-align: center;
+            line-height: 24px;
+            font-size:12px;
+            border:1px solid #ccc;
+            border-right: none;
+            border-top:none;
+        }
+        .weekUl{
+            margin-top:13px;
+            background: #00cdec;
+            overflow: hidden;
+            color: #fff;
+            border-top:1px solid #ccc;
+        }
+        .daysUl{
+            overflow: hidden;
+        }
+        .weekUl>li:last-child{
+            border-right: 1px solid #ccc;
+        }
+        .daysUl>li:last-child{
+            border-right: 1px solid #ccc;
+        }
+        .daysUl>li:nth-child(7n){
+            border-right: 1px solid #ccc;
+        }
+        .bgGreen{
+            background:limegreen;
+        }
+        .daysUl>li{
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="wraper">
+    <input type="text" readonly id="dateInput" placeholder="请选择日期"/>
+    <div class="calendar">
+        <div class="calendar-header">
+            <select name="" id="selectYear"></select>年
+            <select name="" id="selectMonth"></select>月
+        </div>
+        <ul class="weekUl"></ul>
+        <ul class="daysUl"></ul>
+    </div>
+</div>
+<script>
+    var dateInput=document.querySelector("#dateInput");
+    var calendar=document.querySelector(".calendar");
+    var selectYear=document.querySelector("#selectYear");
+    var selectMonth=document.querySelector("#selectMonth");
+    var weekUl=document.querySelector(".weekUl");
+    var daysUl=document.querySelector(".daysUl");
+    var today;
+    /*创建li*/
+    function createLi(obj,inner){
+        var li=document.createElement("li");
+        li.innerHTML=inner;
+        obj.appendChild(li);
+    }
+    /*生成星期li*/
+    function createWeekLi(){
+        for(var i=0;i<7;i++){
+            var arrWeek=["一","二","三","四","五","六","日"];
+            createLi(weekUl,arrWeek[i]);
+        }
+    }
+    createWeekLi();
+    /*生成年份、月份option*/
+    function createOpt(obj,inner){
+        var opt=document.createElement("option");
+        opt.innerHTML=inner;
+        opt.value=inner;
+        obj.appendChild(opt);
+    }
+
+    /*创建年份option*/
+    function createYearOption(){
+        for(var i=1900;i<2100;i++){
+            createOpt(selectYear,i);
+        }
+    }
+    createYearOption();
+
+    /*创建月份option*/
+    function createMonthOption(){
+        for(var i=1;i<=12;i++){
+            createOpt(selectMonth,i);
+        }
+    }
+    createMonthOption();
+    /*创建days中的li*/
+    function createDaysLi(){
+        daysUl.innerHTML="";
+        var yearVal=selectYear.value;
+        var monthVal=selectMonth.value;
+        var date=new Date(yearVal,monthVal-1,1);//获取选中月份的第一天
+        var firstDayWeek=date.getDay();//获取选中月份的第一天星期几
+        var lastDay=new Date(yearVal,monthVal,0).getDate();//获取当月的天数
+        /*创建没有日期的li*/
+        if(firstDayWeek==0){
+            for(var i=0;i<6;i++){
+                createLi(daysUl,"");
+            }
+        }
+        else{
+            for(var i=1;i<firstDayWeek;i++){
+                createLi(daysUl,"");
+            }
+        }
+        /*创建有日期的li*/
+        for(var i=1;i<=lastDay;i++){
+            createLi(daysUl,i);
+        }
+    }
+
+    /*获取当前日期*/
+    function getToday(){
+        var date=new Date();
+        var year=date.getFullYear();
+        var month=date.getMonth();
+        today=date.getDate();
+        selectYear.value=year;
+        selectMonth.value=month;
+        createDaysLi();
+        changeBg();
+        selectDate();
+    }
+    getToday();
+    /*鼠标移上日期改变背景色*/
+    function changeBg(){
+        for(var e of daysUl.children){
+            if(e.innerHTML==today){
+                e.className="bgGreen";
+            }
+            e.onmouseenter=function(){
+                if(this.innerHTML!=today&& this.innerHTML!=""){
+                    this.style.background="yellow";
+                }
+            }
+            e.onmouseleave=function(){
+                if(this.innerHTML!=today&& this.innerHTML!=""){
+                    this.style.background="";
+                }
+            }
+        }
+    }
+    /*判断最后一个日期位置改变宽*/
+    function lastDatePosition(){
+        if(daysUl.lastElementChild.offsetLeft<180){
+            daysUl.lastElementChild.style.width="31px";
+        };
+    }
+    /*改变年份*/
+    selectYear.onchange=function(){
+        createDaysLi();
+        changeBg();
+        selectDate();
+        lastDatePosition();
+    }
+    /*改变月份*/
+    selectMonth.onchange=function(){
+        createDaysLi();
+        changeBg();
+        selectDate();
+        lastDatePosition();
+    }
+    /*点输入框，显示日历，并阻止事件冒泡*/
+    dateInput.onclick=function(e){
+        var e=e||event;
+        calendar.style.display="block";
+        e.stopPropagation();
+        lastDatePosition()
+    }
+    /*点击日历，阻止事件冒泡*/
+    calendar.onclick=function(e){
+        var e=e||event;
+        e.stopPropagation();
+    }
+    /*点击输入框以外内容，日历隐藏*/
+    document.onclick=function(){
+        calendar.style.display="none";
+    }
+    /*点击日历，选择日期并赋值给input框*/
+    function selectDate(){
+        for(var e of daysUl.children){
+            e.onclick=function(){
+                if(this.innerHTML!=""){
+                    var strDate=selectYear.value+"-"+selectMonth.value+"-"+this.innerHTML;
+                    dateInput.value=strDate;
+                    calendar.style.display="none";
+                }
+            }
+        }
+    }
+</script>
+</body>
+</html>
